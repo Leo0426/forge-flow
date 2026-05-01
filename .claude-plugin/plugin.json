@@ -1,0 +1,28 @@
+{
+  "name": "forgeflow",
+  "version": "0.1.0",
+  "description": "面向个人开发者的 AI 协作软件工程能力框架。",
+  "author": {
+    "name": "leo"
+  },
+  "license": "MIT",
+  "skills": [
+    "./skills/decision/decision-forge",
+    "./skills/engineering/zoom-out",
+    "./skills/engineering/code-review",
+    "./skills/engineering/coding-with-tdd",
+    "./skills/engineering/architecture",
+    "./skills/engineering/git-commit",
+    "./skills/governance/issue-breakdown",
+    "./skills/governance/diagnose-lite",
+    "./skills/governance/repo-health",
+    "./skills/operations/release",
+    "./skills/operations/operate",
+    "./skills/product/discovery",
+    "./skills/product/to-prd",
+    "./skills/product/feedback-to-roadmap",
+    "./skills/misc/terse-communication",
+    "./skills/misc/personal-skill-builder",
+    "./skills/misc/setup-forgeflow"
+  ]
+}
