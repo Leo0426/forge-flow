@@ -1,0 +1,29 @@
+{
+  "name": "forgeflow",
+  "owner": {
+    "name": "Leo",
+    "email": "junlei0426@gmail.com"
+  },
+  "description": "ForgeFlow: lightweight engineering capability framework for personal developers",
+  "version": "0.1.0",
+  "plugins": [
+    {
+      "name": "forgeflow",
+      "source": {
+        "source": "github",
+        "repo": "Leo0426/forge-flow"
+      },
+      "displayName": "ForgeFlow",
+      "description": "面向个人开发者的 AI 协作软件工程能力框架。",
+      "author": {
+        "name": "Leo",
+        "email": "junlei0426@gmail.com"
+      },
+      "homepage": "https://github.com/Leo0426/forge-flow",
+      "repository": "https://github.com/Leo0426/forge-flow",
+      "license": "MIT",
+      "keywords": ["engineering", "skills", "framework", "ai-collaboration"],
+      "category": "productivity"
+    }
+  ]
+}
