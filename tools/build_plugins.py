@@ -4,7 +4,11 @@ Build Claude Code and Codex plugin packages from .claude-plugin/plugin.json.
 
 Output:
   build/plugins/claude-code/forgeflow/   - load with: claude --plugin-dir
-  build/plugins/codex/forgeflow/         - load with: codex plugin marketplace add
+  build/plugins/codex/                   - load with: codex plugin marketplace add
+    .agents/plugins/marketplace.json
+    plugins/forgeflow/
+      .codex-plugin/plugin.json
+      skills/
 """
 
 import json
@@ -59,29 +63,60 @@ def build_claude_code(config: dict, skill_dirs: list[Path]) -> Path:
     return out
 
 
-def build_codex(config: dict, skill_dirs: list[Path]) -> Path:
-    out = BUILD_DIR / "codex" / "forgeflow"
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir(parents=True)
+def build_codex(config: dict, skill_dirs: list[Path]) -> tuple[Path, Path]:
+    """Returns (marketplace_root, plugin_dir)."""
+    marketplace_root = BUILD_DIR / "codex"
+    plugin_dir = marketplace_root / "plugins" / "forgeflow"
+
+    if marketplace_root.exists():
+        shutil.rmtree(marketplace_root)
+    plugin_dir.mkdir(parents=True)
 
     for skill_dir in skill_dirs:
         rel = skill_dir.relative_to(ROOT / "skills")
-        dest = out / "skills" / rel
+        dest = plugin_dir / "skills" / rel
         shutil.copytree(skill_dir, dest)
 
-    # Codex uses .agents/plugins/ manifest location
-    manifest = {k: v for k, v in config.items() if k != "skills"}
-    manifest["skills"] = [
-        f"./skills/{skill_dir.relative_to(ROOT / 'skills')}"
-        for skill_dir in skill_dirs
-    ]
-    agents_dir = out / ".agents" / "plugins"
-    agents_dir.mkdir(parents=True)
-    with open(agents_dir / "plugin.json", "w") as f:
-        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    # Plugin manifest: .codex-plugin/plugin.json
+    plugin_manifest = {
+        "name": config["name"],
+        "version": config["version"],
+        "description": config["description"],
+        "author": config.get("author", {}),
+        "license": config.get("license", "MIT"),
+        "skills": "./skills/",
+        "interface": {
+            "displayName": "ForgeFlow",
+            "shortDescription": config["description"],
+            "developerName": config.get("author", {}).get("name", ""),
+            "category": "Engineering",
+            "capabilities": ["Interactive"],
+            "defaultPrompt": [f"Help me use {config['name']}."],
+        },
+    }
+    codex_plugin_dir = plugin_dir / ".codex-plugin"
+    codex_plugin_dir.mkdir()
+    with open(codex_plugin_dir / "plugin.json", "w") as f:
+        json.dump(plugin_manifest, f, ensure_ascii=False, indent=2)
 
-    return out
+    # Marketplace manifest: .agents/plugins/marketplace.json
+    marketplace_manifest = {
+        "name": f"{config['name']}-plugins",
+        "plugins": [
+            {
+                "name": config["name"],
+                "source": {"source": "local", "path": "./plugins/forgeflow"},
+                "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+                "category": "Engineering",
+            }
+        ],
+    }
+    agents_dir = marketplace_root / ".agents" / "plugins"
+    agents_dir.mkdir(parents=True)
+    with open(agents_dir / "marketplace.json", "w") as f:
+        json.dump(marketplace_manifest, f, ensure_ascii=False, indent=2)
+
+    return marketplace_root, plugin_dir
 
 
 def main():
@@ -93,17 +128,17 @@ def main():
         sys.exit(1)
 
     cc_out = build_claude_code(config, skill_dirs)
-    codex_out = build_codex(config, skill_dirs)
+    codex_marketplace, codex_plugin = build_codex(config, skill_dirs)
 
     print(f"built {len(skill_dirs)} skills")
     print(f"  claude-code : {cc_out.relative_to(ROOT)}")
-    print(f"  codex       : {codex_out.relative_to(ROOT)}")
+    print(f"  codex       : {codex_plugin.relative_to(ROOT)}")
     print()
     print("load claude-code plugin:")
     print(f"  claude --plugin-dir ./{cc_out.relative_to(ROOT)}")
     print()
     print("load codex plugin:")
-    print(f"  codex plugin marketplace add ./{codex_out.relative_to(ROOT).parent}")
+    print(f"  codex plugin marketplace add ./{codex_marketplace.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
